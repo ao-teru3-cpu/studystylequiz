@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あなたにぴったりの勉強法診断</title>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --bg-color: #E3F2FD;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 { color: var(--primary-color); font-size: 1.5rem; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin: 10px 0;
+            border: 2px solid var(--primary-color);
+            border-radius: 50px;
+            background: white;
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .hidden { display: none; }
+        .result-card {
+            background: #f0f7ff;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 1rem;
+        }
+        .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .progress {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+        }
+        #progress-bar {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="start-view">
+        <h1>📖 あなたにぴったりの勉強法診断</h1>
+        <p>性格や学習スタイルから、最適な勉強法を見つけます</p>
+        <button class="btn" onclick="startQuiz()">診断をはじめる</button>
+    </div>
+
+    <div id="quiz-view" class="hidden">
+        <div class="progress"><div id="progress-bar"></div></div>
+        <p id="question-text">質問がここに表示されます</p>
+        <button class="btn" onclick="answer(true)">はい</button>
+        <button class="btn" onclick="answer(false)">いいえ</button>
+    </div>
+
+    <div id="result-view" class="hidden">
+        <h2>診断結果</h2>
+        <div class="result-card">
+            <div id="result-icon" class="icon"></div>
+            <h3 id="result-type">タイプ名</h3>
+            <p id="result-desc">説明文</p>
+        </div>
+        <div id="result-tips" style="text-align: left; margin-top: 1rem;"></div>
+        <button class="btn" onclick="location.reload()" style="margin-top: 2rem;">もう一度診断する</button>
+    </div>
+</div>
+
+<script>
+    // --- ここから下がプログラム ---
+    // ここにある「YOUR_GAS_WEB_APP_URL_HERE」を書き換えてね！
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbySHVf77qUAFF2rNgM5VdY7mWDg-qfmRQz18rGGN7U/dev'; 
+
+    const questions = [
+        { text: "教科書の図やイラストに目が止まることが多い", type: 0 },
+        { text: "授業を聞いているだけで内容がスッと入ってくることが多い", type: 1 },
+        { text: "実際に手を動かしてやってみることで理解できることが多い", type: 2 },
+        { text: "教科書や参考書を読んで自分でまとめるのが好き", type: 3 },
+        { text: "「なぜそうなるのか」理由がわかると納得できる", type: 4 }
+    ];
+
+    const types = [
+        { name: "視覚型学習者", icon: "👁️", desc: "図やグラフで理解するのが得意。カラフルなノートを作るのがおすすめ！", tips: ["マインドマップを使って情報を整理しよう", "カラーペンで重要な箇所を色分けするのが効果的", "YouTube動画や図解を積極的に活用しよう"] },
+        { name: "聴覚型学習者", icon: "🎧", desc: "聞いて理解するのが得意。音読や講義形式がおすすめ！", tips: ["声に出して読む「音読勉強法」が効果的", "友達に説明することで理解が深まる", "軽いBGMをかけながら勉強すると集中しやすい"] },
+        { name: "体験型学習者", icon: "✍️", desc: "実際に書いたり体を動かしたりすることで理解が深まるタイプ。反復練習や実験が向いています！", tips: ["何度も書いて覚える「反復書き取り」が効果的", "実験や体験型の学習に積極的に参加しよう", "ポモドーロ法（25分集中+5分休憩）で集中力UP"] },
+        { name: "読み書き型学習者", icon: "📖", desc: "文章を読んで整理することが得意。ノートにまとめることで理解が深まるタイプです。", tips: ["丁寧にノートを取り、自分の言葉でまとめ直そう", "箇条書きやリストで情報を整理するのが効果的", "問題を自分で作って解く「自作問題法」がおすすめ"] },
+        { name: "論理型学習者", icon: "🧩", desc: "理由や仕組みから理解するのが得意。「なぜ？」を追求することで力を発揮するタイプです。", tips: ["「なぜそうなるのか」を徹底的に調べてみよう", "原理・原則から覚えることで応用力がつく", "問題を解く前に「解法の流れ」を考える習慣をつけよう"] }
+    ];
+
+    let currentIdx = 0;
+    let scores = [0, 0, 0, 0, 0];
+
+    function startQuiz() {
+        document.getElementById('start-view').classList.add('hidden');
+        document.getElementById('quiz-view').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        document.getElementById('question-text').innerText = questions[currentIdx].text;
+        document.getElementById('progress-bar').style.width = ((currentIdx / questions.length) * 100) + "%";
+    }
+
+    function answer(isYes) {
+        if (isYes) scores[questions[currentIdx].type]++;
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    async function showResult() {
+        document.getElementById('quiz-view').classList.add('hidden');
+        document.getElementById('result-view').classList.remove('hidden');
+        const maxScoreIdx = scores.indexOf(Math.max(...scores));
+        const result = types[maxScoreIdx];
+        document.getElementById('result-icon').innerText = result.icon;
+        document.getElementById('result-type').innerText = result.name;
+        document.getElementById('result-desc').innerText = result.desc;
+        let tipsHtml = "<strong>💡 おすすめ勉強法:</strong><ul>";
+        result.tips.forEach(tip => tipsHtml += `<li>${tip}</li>`);
+        tipsHtml += "</ul>";
+        document.getElementById('result-tips').innerHTML = tipsHtml;
+        sendData(result.name);
+    }
+
+    async function sendData(resultType) {
+        let location = "不明";
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const json = await res.json();
+            location = `${json.region} ${json.city}`;
+        } catch(e) { console.log("Location fetch failed"); }
+
+        const payload = {
+            timestamp: new Date().toLocaleString('ja-JP'),
+            result: resultType,
+            scores: scores.join(','),
+            location: location,
+            device: navigator.userAgent.includes("Mobi") ? "スマホ" : "PC",
+            os: navigator.platform
+        };
+
+        const formData = new URLSearchParams();
+        formData.append('data', JSON.stringify(payload));
+
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            });
+            console.log("Data sent successfully");
+        } catch (e) {
+            console.error("Error sending data", e);
+        }
+    }
+</script>
+
+</body>
+</html>
